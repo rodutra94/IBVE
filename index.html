@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-<head>
+<head <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Escala de Músicos</title>
@@ -275,13 +275,22 @@ const dadosPadrao = {
 const MESES=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 const DIAS=['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
 
-const LS={
-  dados:()=>{const s=localStorage.getItem('e_dados');return s?JSON.parse(s):JSON.parse(JSON.stringify(dadosPadrao));},
-  setDados:d=>localStorage.setItem('e_dados',JSON.stringify(d)),
-  escalas:()=>{const s=localStorage.getItem('e_escalas');return s?JSON.parse(s):{};},
-  setEscalas:e=>localStorage.setItem('e_escalas',JSON.stringify(e)),
-  disp:()=>{const s=localStorage.getItem('e_disp');return s?JSON.parse(s):{};},
-  setDisp:d=>localStorage.setItem('e_disp',JSON.stringify(d)),
+// Substitua pelos dados que aparecem em Project Settings > API no Supabase
+const SUPABASE_URL = 'https://SUA_URL_AQUI.supabase.co';
+const SUPABASE_KEY = 'SUA_CHAVE_ANON_AQUI';
+const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const LS = {
+  // BUSCAR DA NUVEM
+  getEscalas: async () => {
+    const { data } = await supabase.from('escalas_nuvem').select('dados').eq('id', 'principal').single();
+    return data ? data.dados : {};
+  },
+  // SALVAR NA NUVEM
+  setEscalas: async (escalas) => {
+    await supabase.from('escalas_nuvem').upsert({ id: 'principal', dados: escalas });
+    toast("Escala salva na nuvem para todos!");
+  }
 };
 
 // ============ SESSÃO ============
