@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Escala de Músicos</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gold:#c9a84c;--gold-light:#e8c97a;--dark:#0e0e12;--card:#16161e;--card2:#1e1e2a;
+    --border:#2a2a3a;--text:#e8e8f0;--muted:#7a7a9a;--green:#3db87a;--red:#e05555;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--dark);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;}
+
+  /* LOGIN */
+  #login-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:24px;}
+  .login-box{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:28px 22px;width:100%;max-width:360px;}
+  .login-box h2{font-family:'Playfair Display',serif;color:var(--gold);font-size:1.4rem;text-align:center;margin-bottom:6px;}
+  .login-box p{font-size:0.8rem;color:var(--muted);text-align:center;margin-bottom:22px;}
+  .login-options{display:flex;gap:8px;margin-bottom:20px;}
+  .login-opt{flex:1;padding:10px;background:var(--card2);border:1px solid var(--border);border-radius:10px;text-align:center;cursor:pointer;font-size:0.82rem;color:var(--muted);transition:all 0.2s;}
+  .login-opt.active{border-color:var(--gold);color:var(--gold);background:rgba(201,168,76,0.08);}
+  .fl{margin-bottom:14px;}
+  .fl label{font-size:0.73rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:5px;}
+  .fl input,.fl select{width:100%;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:11px 13px;color:var(--text);font-size:0.9rem;}
+  .fl input:focus,.fl select:focus{outline:none;border-color:var(--gold);}
+  .btn-login{width:100%;padding:13px;background:linear-gradient(135deg,var(--gold),var(--gold-light));color:#0e0e12;font-weight:700;font-size:0.95rem;border:none;border-radius:10px;cursor:pointer;margin-top:6px;}
+  .login-err{color:var(--red);font-size:0.8rem;text-align:center;margin-top:10px;display:none;}
+
+  /* HEADER */
+  header{background:linear-gradient(135deg,#0e0e12,#1a1428);border-bottom:1px solid var(--border);padding:14px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 4px 30px rgba(0,0,0,0.5);}
+  .hdr-title h1{font-family:'Playfair Display',serif;font-size:1.3rem;color:var(--gold);}
+  .hdr-title p{font-size:0.72rem;color:var(--muted);margin-top:1px;}
+  .hdr-user{display:flex;align-items:center;gap:8px;}
+  .hdr-user .badge-role{font-size:0.68rem;padding:3px 9px;border-radius:20px;font-weight:600;}
+  .badge-admin{background:rgba(201,168,76,0.15);border:1px solid rgba(201,168,76,0.4);color:var(--gold);}
+  .badge-membro{background:rgba(61,184,122,0.12);border:1px solid rgba(61,184,122,0.3);color:var(--green);}
+  .btn-sair{background:transparent;border:none;color:var(--muted);cursor:pointer;font-size:0.78rem;padding:4px 8px;}
+
+  /* TABS */
+  .tabs{display:flex;background:var(--card);border-bottom:1px solid var(--border);overflow-x:auto;}
+  .tab{flex:1;min-width:70px;padding:11px 6px;text-align:center;font-size:0.72rem;font-weight:500;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all 0.2s;white-space:nowrap;}
+  .tab.active{color:var(--gold);border-bottom-color:var(--gold);background:rgba(201,168,76,0.06);}
+
+  .view{display:none;padding:16px;animation:fadeIn 0.3s;}
+  .view.active{display:block;}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:translateY(0);}}
+
+  /* BOTÕES */
+  .btn-primary{width:100%;padding:13px;background:linear-gradient(135deg,var(--gold),var(--gold-light));color:#0e0e12;font-weight:700;font-size:0.92rem;border:none;border-radius:10px;cursor:pointer;}
+  .btn-green{padding:9px 16px;background:rgba(61,184,122,0.15);border:1px solid var(--green);color:var(--green);border-radius:8px;cursor:pointer;font-size:0.84rem;}
+  .btn-red{padding:7px 12px;background:rgba(224,85,85,0.12);border:1px solid rgba(224,85,85,0.3);color:var(--red);border-radius:8px;cursor:pointer;font-size:0.8rem;}
+
+  /* MÊS */
+  .month-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+  .month-nav button{background:var(--card2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:8px 14px;font-size:1rem;cursor:pointer;}
+  .month-nav h2,.month-nav span{font-family:'Playfair Display',serif;font-size:1.1rem;color:var(--gold);}
+
+  /* CARDS */
+  .card{background:var(--card);border:1px solid var(--border);border-radius:12px;margin-bottom:14px;overflow:hidden;}
+  .card-header{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:var(--card2);cursor:pointer;}
+  .card-header .data{font-family:'Playfair Display',serif;font-size:1rem;color:var(--gold);}
+  .card-header .dia{font-size:0.75rem;color:var(--muted);margin-top:1px;}
+  .card-header .chevron{color:var(--muted);transition:transform 0.2s;}
+  .card-header.open .chevron{transform:rotate(180deg);}
+  .card-body{padding:12px 14px;display:none;}
+  .card-body.open{display:block;}
+  .role-row{display:flex;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--border);gap:10px;}
+  .role-row:last-child{border-bottom:none;}
+  .role-label{font-size:0.72rem;font-weight:500;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;min-width:90px;padding-top:4px;}
+  .role-names{flex:1;}
+  .nome-pill{display:inline-flex;align-items:center;gap:5px;background:rgba(201,168,76,0.12);border:1px solid rgba(201,168,76,0.25);color:var(--gold-light);border-radius:20px;padding:3px 10px;margin:2px 3px 2px 0;font-size:0.78rem;}
+  .sub-btn{background:none;border:none;cursor:pointer;color:var(--muted);font-size:0.8rem;padding:0;line-height:1;}
+  .sub-btn:hover{color:var(--red);}
+
+  /* MODAL */
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:200;align-items:flex-end;justify-content:center;}
+  .modal-overlay.open{display:flex;}
+  .modal{background:var(--card);border:1px solid var(--border);border-radius:20px 20px 0 0;padding:20px 16px;width:100%;max-height:75vh;overflow-y:auto;animation:slideUp 0.25s;}
+  @keyframes slideUp{from{transform:translateY(40px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+  .modal h3{font-family:'Playfair Display',serif;color:var(--gold);font-size:1rem;margin-bottom:4px;}
+  .modal .sub-info{font-size:0.78rem;color:var(--muted);margin-bottom:14px;}
+  .sugestao-item{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--card2);border:1px solid var(--border);border-radius:10px;margin-bottom:8px;gap:8px;}
+  .sugestao-item .nome{font-size:0.88rem;flex:1;}
+  .badge{font-size:0.7rem;color:var(--green);background:rgba(61,184,122,0.1);border:1px solid rgba(61,184,122,0.3);border-radius:20px;padding:2px 8px;white-space:nowrap;}
+  .badge.ind{color:var(--muted);background:transparent;border-color:var(--border);}
+  .modal-close{width:100%;padding:12px;background:var(--card2);border:1px solid var(--border);color:var(--muted);border-radius:10px;cursor:pointer;margin-top:8px;font-size:0.88rem;}
+
+  /* DISPONIBILIDADE */
+  .disp-step{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:14px;}
+  .disp-step h3{font-family:'Playfair Display',serif;color:var(--gold);font-size:1rem;margin-bottom:12px;}
+  .form-row{margin-bottom:12px;}
+  .form-row label{font-size:0.75rem;color:var(--muted);display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px;}
+  .form-row input,.form-row select{width:100%;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);font-size:0.88rem;}
+  .form-row input:focus,.form-row select:focus{outline:none;border-color:var(--gold);}
+  .datas-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:10px;}
+  .data-toggle{padding:10px;background:var(--card2);border:1px solid var(--border);border-radius:10px;text-align:center;cursor:pointer;transition:all 0.2s;}
+  .data-toggle .dt{font-size:0.88rem;font-weight:500;}
+  .data-toggle .dw{font-size:0.7rem;color:var(--muted);margin-top:2px;}
+  .data-toggle.selected{background:rgba(61,184,122,0.12);border-color:var(--green);color:var(--green);}
+  .data-toggle.selected .dw{color:var(--green);opacity:0.7;}
+  .disp-salva{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;}
+  .disp-salva .nm{font-size:0.85rem;font-weight:500;}
+  .disp-salva .qt{font-size:0.75rem;color:var(--muted);margin-top:2px;}
+
+  /* MÚSICOS / EDITAR */
+  .musico-section{margin-bottom:22px;}
+  .musico-section h3{font-family:'Playfair Display',serif;font-size:1rem;color:var(--gold);margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border);}
+  .musico-list{display:flex;flex-wrap:wrap;gap:8px;}
+  .musico-tag{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:0.82rem;}
+  .form-section{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:16px;}
+  .form-section h3{font-family:'Playfair Display',serif;font-size:0.95rem;color:var(--gold);margin-bottom:12px;}
+  .btn-add{padding:9px 18px;background:var(--card2);border:1px solid var(--gold);color:var(--gold);border-radius:8px;cursor:pointer;font-size:0.85rem;}
+  .btn-rem{background:transparent;border:none;color:var(--red);font-size:0.85rem;cursor:pointer;padding:2px 6px;}
+  .edit-list{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
+  .edit-tag{background:var(--card2);border:1px solid var(--border);border-radius:20px;padding:4px 10px;font-size:0.78rem;display:flex;align-items:center;gap:4px;}
+  .alert{background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.3);border-radius:10px;padding:10px 14px;font-size:0.82rem;color:var(--gold-light);margin-bottom:14px;}
+  .empty-state{text-align:center;padding:50px 20px;color:var(--muted);}
+  .empty-state .icon{font-size:2.5rem;margin-bottom:10px;}
+
+  #toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(60px);background:var(--gold);color:#0e0e12;padding:10px 22px;border-radius:30px;font-size:0.85rem;font-weight:600;transition:transform 0.3s;z-index:999;pointer-events:none;}
+  #toast.show{transform:translateX(-50%) translateY(0);}
+</style>
+</head>
+<body>
+
+<!-- ===== TELA DE LOGIN ===== -->
+<div id="login-screen">
+  <div class="login-box">
+    <h2>🎵 Escala de Músicos</h2>
+    <p>Equipe de Louvor</p>
+
+    <div class="login-options">
+      <div class="login-opt active" id="opt-membro" onclick="setLoginTipo('membro')">👤 Membro</div>
+      <div class="login-opt" id="opt-admin" onclick="setLoginTipo('admin')">🔐 Admin</div>
+    </div>
+
+    <!-- MEMBRO -->
+    <div id="form-membro">
+      <div class="fl">
+        <label>Seu nome</label>
+        <select id="login-nome">
+          <option value="">— Selecione —</option>
+        </select>
+      </div>
+      <button class="btn-login" onclick="entrarMembro()">Entrar</button>
+    </div>
+
+    <!-- ADMIN -->
+    <div id="form-admin" style="display:none">
+      <div class="fl">
+        <label>Nome</label>
+        <input type="text" id="admin-nome" placeholder="Nome do administrador">
+      </div>
+      <div class="fl">
+        <label>Senha</label>
+        <input type="password" id="admin-senha" placeholder="••••••••" onkeydown="if(event.key==='Enter')entrarAdmin()">
+      </div>
+      <button class="btn-login" onclick="entrarAdmin()">Entrar como Admin</button>
+    </div>
+
+    <div class="login-err" id="login-err">Nome ou senha incorretos.</div>
+  </div>
+</div>
+
+<!-- ===== APP ===== -->
+<div id="app" style="display:none">
+  <header>
+    <div class="hdr-title">
+      <h1>🎵 Escala</h1>
+      <p id="hdr-sub"></p>
+    </div>
+    <div class="hdr-user">
+      <span class="badge-role" id="hdr-badge"></span>
+      <button class="btn-sair" onclick="sair()">Sair</button>
+    </div>
+  </header>
+
+  <div class="tabs" id="tabs-bar"></div>
+
+  <!-- GERAR (admin) -->
+  <div id="view-gerar" class="view">
+    <div class="month-nav">
+      <button onclick="changeMonth(-1)">‹</button>
+      <h2 id="mes-label"></h2>
+      <button onclick="changeMonth(1)">›</button>
+    </div>
+    <button class="btn-primary" onclick="gerarEscala()" style="margin-bottom:14px">✨ Gerar Escala do Mês</button>
+    <div id="escala-gerada"></div>
+    <button class="btn-green" id="btn-salvar" style="display:none;width:100%;padding:13px;margin-top:4px" onclick="salvarEscala()">💾 Salvar Escala</button>
+  </div>
+
+  <!-- SALVAS -->
+  <div id="view-salvas" class="view">
+    <div id="lista-salvas"></div>
+  </div>
+
+  <!-- DISPONIBILIDADE -->
+  <div id="view-disp" class="view">
+    <div class="disp-step">
+      <h3>📋 Registrar Disponibilidade</h3>
+      <div class="form-row" id="disp-nome-row">
+        <label>Seu nome</label>
+        <select id="disp-nome" onchange="carregarDatasDisp()">
+          <option value="">— Selecione —</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label>Mês de referência</label>
+        <div class="month-nav" style="margin-bottom:0">
+          <button onclick="changeMonthDisp(-1)">‹</button>
+          <span id="disp-mes-label"></span>
+          <button onclick="changeMonthDisp(1)">›</button>
+        </div>
+      </div>
+      <label style="font-size:0.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;display:block;">Toque nas datas em que estará disponível</label>
+      <div class="datas-grid" id="datas-grid"></div>
+      <button class="btn-primary" style="margin-top:16px" onclick="salvarDisponibilidade()">✅ Salvar Disponibilidade</button>
+    </div>
+    <div class="disp-step">
+      <h3>📊 Disponibilidades Registradas</h3>
+      <div id="lista-disp"></div>
+    </div>
+  </div>
+
+  <!-- MÚSICOS -->
+  <div id="view-musicos" class="view">
+    <div id="lista-musicos"></div>
+  </div>
+
+  <!-- EDITAR (admin) -->
+  <div id="view-editar" class="view">
+    <div class="alert">Adicione ou remova músicos de cada função.</div>
+    <div id="edit-forms"></div>
+  </div>
+</div>
+
+<!-- MODAL SUBSTITUIÇÃO -->
+<div class="modal-overlay" id="modal-sub">
+  <div class="modal">
+    <h3 id="modal-titulo"></h3>
+    <p class="sub-info" id="modal-info"></p>
+    <div id="modal-lista"></div>
+    <button class="modal-close" onclick="fecharModal()">Cancelar</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ============ CONFIG ============
+const ADMIN = { nome: 'Rodrigo Lopes', senha: 'Bigode2026' };
+
+const FUNCOES = {
+  vocalPrincipal:{label:'Vocal Principal',qtd:1},
+  backVocal:{label:'Back Vocal',qtd:5},
+  violao:{label:'Violão',qtd:1},
+  contrabaixo:{label:'Contra Baixo',qtd:1},
+  teclado:{label:'Teclado',qtd:1},
+  guitarra:{label:'Guitarra',qtd:1},
+  bateria:{label:'Bateria',qtd:1},
+};
+
+const dadosPadrao = {
+  vocalPrincipal:['Beatriz','Eva','Estela','Gisele','Felipe','Namir','Rodrigo'],
+  backVocal:['Andréa','Beatriz','Carolina','Cristiane','Estela','Eva','Esdras','Felipe','Gisele','Jaqueline','Janice','Jackeline','Luana','Mairy','Márcia','Paulo Roberto','Eduarda','Rodrigo','Verônica','Victor','Tainara'],
+  violao:['Allan','Diego','Esdras','Eduardo','Fábio','Marcela','Matheus','Rodrigo','Vinícius'],
+  contrabaixo:['Kaike','Matheus','Esdras','Izaque','Rodrigo D','Marcela'],
+  teclado:['João Vitor','Matheus','Rodrigo'],
+  guitarra:['Diego','Vinícius','Eduardo'],
+  bateria:['Izaque','João Vitor','Kaike','Marcela','Matheus'],
+};
+
+const MESES=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+const DIAS=['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
+
+const LS={
+  dados:()=>{const s=localStorage.getItem('e_dados');return s?JSON.parse(s):JSON.parse(JSON.stringify(dadosPadrao));},
+  setDados:d=>localStorage.setItem('e_dados',JSON.stringify(d)),
+  escalas:()=>{const s=localStorage.getItem('e_escalas');return s?JSON.parse(s):{};},
+  setEscalas:e=>localStorage.setItem('e_escalas',JSON.stringify(e)),
+  disp:()=>{const s=localStorage.getItem('e_disp');return s?JSON.parse(s):{};},
+  setDisp:d=>localStorage.setItem('e_disp',JSON.stringify(d)),
+};
+
+// ============ SESSÃO ============
+let sessao = null; // { nome, isAdmin }
+
+// Tabs por perfil
+const TABS_ADMIN  = [{id:'gerar',label:'📅 Gerar'},{id:'salvas',label:'💾 Salvas'},{id:'disp',label:'🙋 Disponib.'},{id:'musicos',label:'👥 Músicos'},{id:'editar',label:'⚙️ Editar'}];
+const TABS_MEMBRO = [{id:'salvas',label:'📅 Escala'},{id:'disp',label:'🙋 Disponib.'},{id:'musicos',label:'👥 Músicos'}];
+
+function setLoginTipo(tipo){
+  document.getElementById('opt-membro').classList.toggle('active', tipo==='membro');
+  document.getElementById('opt-admin').classList.toggle('active', tipo==='admin');
+  document.getElementById('form-membro').style.display = tipo==='membro'?'block':'none';
+  document.getElementById('form-admin').style.display  = tipo==='admin'?'block':'none';
+  document.getElementById('login-err').style.display='none';
+}
+
+function popularSelectMembro(){
+  const todos=new Set(Object.values(LS.dados()).flat());
+  const sel=document.getElementById('login-nome');
+  sel.innerHTML='<option value="">— Selecione —</option>';
+  [...todos].sort().forEach(n=>{const o=document.createElement('option');o.value=n;o.textContent=n;sel.appendChild(o);});
+}
+
+function entrarMembro(){
+  const nome=document.getElementById('login-nome').value;
+  if(!nome){toast('Selecione seu nome.');return;}
+  iniciarSessao(nome, false);
+}
+
+function entrarAdmin(){
+  const nome=document.getElementById('admin-nome').value.trim();
+  const senha=document.getElementById('admin-senha').value.trim();
+  const nomeOk=nome.toLowerCase()===ADMIN.nome.toLowerCase();
+  const senhaOk=senha===ADMIN.senha;
+  if(nomeOk && senhaOk){
+    document.getElementById('login-err').style.display='none';
+    iniciarSessao(ADMIN.nome, true);
+  } else {
+    document.getElementById('login-err').style.display='block';
+  }
+}
+
+function iniciarSessao(nome, isAdmin){
+  sessao={nome,isAdmin};
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('app').style.display='block';
+  document.getElementById('hdr-sub').textContent=nome;
+  const badge=document.getElementById('hdr-badge');
+  badge.textContent=isAdmin?'Admin':'Membro';
+  badge.className='badge-role '+(isAdmin?'badge-admin':'badge-membro');
+  buildTabs();
+  // Abrir primeira aba
+  const tabs=isAdmin?TABS_ADMIN:TABS_MEMBRO;
+  showTab(tabs[0].id);
+}
+
+function sair(){
+  sessao=null;
+  document.getElementById('app').style.display='none';
+  document.getElementById('login-screen').style.display='flex';
+  document.getElementById('admin-nome').value='';
+  document.getElementById('admin-senha').value='';
+  document.getElementById('login-err').style.display='none';
+  popularSelectMembro();
+}
+
+function buildTabs(){
+  const tabs=sessao.isAdmin?TABS_ADMIN:TABS_MEMBRO;
+  const bar=document.getElementById('tabs-bar');
+  bar.innerHTML=tabs.map(t=>`<div class="tab" id="tab-${t.id}" onclick="showTab('${t.id}')">${t.label}</div>`).join('');
+}
+
+// ============ TABS ============
+function showTab(id){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('view-'+id).classList.add('active');
+  const el=document.getElementById('tab-'+id);
+  if(el)el.classList.add('active');
+  if(id==='salvas') renderSalvas();
+  if(id==='musicos') renderMusicos();
+  if(id==='editar') renderEditar();
+  if(id==='disp') initDisp();
+}
+
+// ============ MÊS GERAR ============
+let hoje=new Date(),ano=hoje.getFullYear(),mes=hoje.getMonth();
+function changeMonth(d){mes+=d;if(mes>11){mes=0;ano++;}if(mes<0){mes=11;ano--;}document.getElementById('mes-label').textContent=MESES[mes]+' '+ano;}
+function initMesLabel(){document.getElementById('mes-label').textContent=MESES[mes]+' '+ano;}
+
+function getDatas(a,m){const r=[],t=new Date(a,m+1,0).getDate();for(let d=1;d<=t;d++){const dt=new Date(a,m,d);if(dt.getDay()===0||dt.getDay()===3)r.push(dt);}return r;}
+
+// ============ DISPONIBILIDADE ============
+let dAno=hoje.getFullYear(),dMes=hoje.getMonth()===11?0:hoje.getMonth()+1;
+if(hoje.getMonth()===11)dAno++;
+let dSel=new Set();
+
+function dispKey(nome,a,m){return `${nome}||${a}-${String(m+1).padStart(2,'0')}`;}
+function isDisp(nome,iso,a,m){const d=LS.disp(),k=dispKey(nome,a,m);if(!d[k])return true;return d[k].includes(iso);}
+
+function changeMonthDisp(d){dMes+=d;if(dMes>11){dMes=0;dAno++;}if(dMes<0){dMes=11;dAno--;}document.getElementById('disp-mes-label').textContent=MESES[dMes]+' '+dAno;carregarDatasDisp();}
+
+function initDisp(){
+  // Se membro: fix no próprio nome; se admin: select livre
+  const row=document.getElementById('disp-nome-row');
+  const sel=document.getElementById('disp-nome');
+  if(sessao.isAdmin){
+    row.style.display='block';
+    const todos=new Set(Object.values(LS.dados()).flat());
+    const cur=sel.value;
+    sel.innerHTML='<option value="">— Selecione —</option>';
+    [...todos].sort().forEach(n=>{const o=document.createElement('option');o.value=n;o.textContent=n;if(n===cur)o.selected=true;sel.appendChild(o);});
+  } else {
+    row.style.display='none';
+    sel.innerHTML=`<option value="${sessao.nome}">${sessao.nome}</option>`;
+    sel.value=sessao.nome;
+  }
+  document.getElementById('disp-mes-label').textContent=MESES[dMes]+' '+dAno;
+  carregarDatasDisp();
+  renderListaDisp();
+}
+
+function carregarDatasDisp(){
+  const nome=document.getElementById('disp-nome').value;
+  const grid=document.getElementById('datas-grid');
+  const datas=getDatas(dAno,dMes);
+  dSel=new Set();
+  if(nome){const d=LS.disp(),k=dispKey(nome,dAno,dMes);if(d[k])d[k].forEach(x=>dSel.add(x));}
+  if(!datas.length){grid.innerHTML='<p style="color:var(--muted);font-size:0.82rem;grid-column:1/-1">Nenhum culto neste mês.</p>';return;}
+  grid.innerHTML=datas.map(dt=>{
+    const iso=dt.toISOString().split('T')[0];
+    const ds=`${String(dt.getDate()).padStart(2,'0')}/${String(dt.getMonth()+1).padStart(2,'0')}`;
+    return `<div class="data-toggle ${dSel.has(iso)?'selected':''}" data-iso="${iso}" onclick="toggleData(this)"><div class="dt">${ds}</div><div class="dw">${DIAS[dt.getDay()]}</div></div>`;
+  }).join('');
+}
+
+function toggleData(el){const iso=el.dataset.iso;if(dSel.has(iso)){dSel.delete(iso);el.classList.remove('selected');}else{dSel.add(iso);el.classList.add('selected');}}
+
+function salvarDisponibilidade(){
+  const nome=document.getElementById('disp-nome').value;
+  if(!nome){toast('Selecione seu nome.');return;}
+  const d=LS.disp();d[dispKey(nome,dAno,dMes)]=[...dSel];LS.setDisp(d);
+  renderListaDisp();toast(`Disponibilidade de ${nome} salva!`);
+}
+
+function renderListaDisp(){
+  const d=LS.disp(),cont=document.getElementById('lista-disp');
+  let keys=Object.keys(d).filter(k=>d[k].length>0);
+  // Membro vê apenas o próprio
+  if(!sessao.isAdmin) keys=keys.filter(k=>k.startsWith(sessao.nome+'||'));
+  keys=keys.sort().reverse();
+  if(!keys.length){cont.innerHTML='<div class="empty-state"><div class="icon">📭</div><p>Nenhuma disponibilidade registrada.</p></div>';return;}
+  cont.innerHTML=keys.map(k=>{
+    const [nome,mesStr]=k.split('||');
+    const [a,m]=mesStr.split('-');
+    const q=d[k].length;
+    const btnDel=sessao.isAdmin?`<button class="btn-red" onclick="remDisp('${k}')">🗑</button>`:'';
+    return `<div class="disp-salva"><div><div class="nm">${nome} — ${MESES[parseInt(m)-1]} ${a}</div><div class="qt">${q} data${q>1?'s':''}</div></div>${btnDel}</div>`;
+  }).join('');
+}
+
+function remDisp(k){const d=LS.disp();delete d[k];LS.setDisp(d);renderListaDisp();toast('Removido.');}
+
+// ============ GERAR ESCALA ============
+let draft=null;
+
+function gerarEscala(){
+  const datas=getDatas(ano,mes),dados=LS.dados(),escala=[],cont={};
+  Object.values(dados).flat().forEach(p=>cont[p]=0);
+  for(const dt of datas){
+    const iso=dt.toISOString().split('T')[0];
+    const escalados={},culto={data:dt,funcoes:{},ausentes:{}};
+    for(const [fk,fi] of Object.entries(FUNCOES)){
+      const lista=[...(dados[fk]||[])];
+      lista.sort((a,b)=>{const da=isDisp(a,iso,ano,mes)?0:1,db=isDisp(b,iso,ano,mes)?0:1;return da!==db?da-db:(cont[a]||0)-(cont[b]||0);});
+      const sel=[];
+      for(const p of lista){if(sel.length>=fi.qtd)break;if(!escalados[p]){sel.push(p);escalados[p]=fk;cont[p]=(cont[p]||0)+1;}}
+      culto.funcoes[fk]=sel;
+    }
+    escala.push(culto);
+  }
+  draft={ano,mes,cultos:escala};
+  renderCultos('escala-gerada',escala,null);
+  document.getElementById('btn-salvar').style.display='block';
+}
+
+function renderCultos(contId,cultos,escalaKey){
+  const cont=document.getElementById(contId);
+  if(!cultos||!cultos.length){cont.innerHTML='<div class="empty-state"><div class="icon">📭</div><p>Nenhum culto neste mês.</p></div>';return;}
+  cont.innerHTML=cultos.map(culto=>{
+    const dt=culto.data instanceof Date?culto.data:new Date(culto.data);
+    const ds=`${String(dt.getDate()).padStart(2,'0')}/${String(dt.getMonth()+1).padStart(2,'0')}/${dt.getFullYear()}`;
+    const linhas=Object.entries(FUNCOES).map(([fk,f])=>{
+      const nomes=culto.funcoes[fk]||[];
+      const pills=nomes.map(n=>{
+        const btn=(escalaKey&&sessao&&sessao.isAdmin)?`<button class="sub-btn" onclick="abrirModal(event,'${culto.id}','${fk}','${n}','${escalaKey}')">✕</button>`:'';
+        return `<span class="nome-pill">${n}${btn}</span>`;
+      }).join('');
+      return `<div class="role-row"><div class="role-label">${f.label}</div><div class="role-names">${pills||'<span style="color:var(--muted);font-size:0.8rem">—</span>'}</div></div>`;
+    }).join('');
+    return `<div class="card"><div class="card-header" onclick="toggleCard(this)"><div><div class="data">${ds}</div><div class="dia">${DIAS[dt.getDay()]}</div></div><span class="chevron">▾</span></div><div class="card-body">${linhas}</div></div>`;
+  }).join('');
+}
+
+function toggleCard(h){h.classList.toggle('open');h.nextElementSibling.classList.toggle('open');}
+
+function salvarEscala(){
+  if(!draft)return;
+  const salvas=LS.escalas();
+  const key=`${draft.ano}-${String(draft.mes+1).padStart(2,'0')}`;
+  const cultos=draft.cultos.map(c=>({...c,id:`${key}_${(c.data instanceof Date?c.data:new Date(c.data)).toISOString().split('T')[0]}`,data:c.data instanceof Date?c.data.toISOString():c.data,ausentes:c.ausentes||{}}));
+  salvas[key]={id:key,ano:draft.ano,mes:draft.mes,cultos};
+  LS.setEscalas(salvas);
+  draft=null;
+  document.getElementById('btn-salvar').style.display='none';
+  renderCultos('escala-gerada',cultos.map(c=>({...c,data:new Date(c.data)})),key);
+  toast('Escala salva!');
+}
+
+// ============ SALVAS ============
+function renderSalvas(){
+  const salvas=LS.escalas(),cont=document.getElementById('lista-salvas');
+  const keys=Object.keys(salvas).sort().reverse();
+  if(!keys.length){cont.innerHTML='<div class="empty-state"><div class="icon">📁</div><p>Nenhuma escala salva ainda.</p></div>';return;}
+  cont.innerHTML=keys.map(k=>{
+    const esc=salvas[k];
+    const cultos=esc.cultos.map(c=>({...c,data:new Date(c.data)}));
+    const cards=cultos.map(culto=>{
+      const dt=culto.data;
+      const ds=`${String(dt.getDate()).padStart(2,'0')}/${String(dt.getMonth()+1).padStart(2,'0')}/${dt.getFullYear()}`;
+      const linhas=Object.entries(FUNCOES).map(([fk,f])=>{
+        const nomes=culto.funcoes[fk]||[];
+        const pills=nomes.map(n=>{
+          const btn=(sessao&&sessao.isAdmin)?`<button class="sub-btn" onclick="abrirModal(event,'${culto.id}','${fk}','${n}','${k}')">✕</button>`:'';
+          return `<span class="nome-pill">${n}${btn}</span>`;
+        }).join('');
+        return `<div class="role-row"><div class="role-label">${f.label}</div><div class="role-names">${pills}</div></div>`;
+      }).join('');
+      return `<div class="card"><div class="card-header" onclick="toggleCard(this)"><div><div class="data">${ds}</div><div class="dia">${DIAS[dt.getDay()]}</div></div><span class="chevron">▾</span></div><div class="card-body">${linhas}</div></div>`;
+    }).join('');
+    const btnDel=sessao.isAdmin?`<button class="btn-red" onclick="deletarEscala('${k}')">🗑 Deletar</button>`:'';
+    return `<div style="display:flex;justify-content:space-between;align-items:center;margin:16px 0 10px"><h3 style="font-family:'Playfair Display',serif;color:var(--gold);font-size:1rem">${MESES[esc.mes]} ${esc.ano}</h3>${btnDel}</div>${cards}`;
+  }).join('');
+}
+
+function deletarEscala(k){const s=LS.escalas();delete s[k];LS.setEscalas(s);renderSalvas();toast('Escala removida.');}
+
+// ============ SUBSTITUIÇÃO ============
+let mCtx=null;
+
+function abrirModal(evt,cultoId,funcKey,nomeAtual,escalaKey){
+  evt.stopPropagation();
+  const salvas=LS.escalas(),esc=salvas[escalaKey];
+  if(!esc){toast('Escala não encontrada.');return;}
+  const culto=esc.cultos.find(c=>c.id===cultoId);
+  if(!culto){toast('Culto não encontrado.');return;}
+  mCtx={cultoId,funcKey,nomeAtual,escalaKey};
+  const dt=new Date(culto.data),iso=dt.toISOString().split('T')[0];
+  const ds=`${String(dt.getDate()).padStart(2,'0')}/${String(dt.getMonth()+1).padStart(2,'0')}`;
+  document.getElementById('modal-titulo').textContent=`Substituir: ${nomeAtual}`;
+  document.getElementById('modal-info').textContent=`${FUNCOES[funcKey].label} • ${ds} (${DIAS[dt.getDay()]})`;
+  const dados=LS.dados(),lista=dados[funcKey]||[];
+  const jaEscalados=new Set(Object.values(culto.funcoes).flat());
+  const sugs=lista.filter(n=>n!==nomeAtual).map(n=>({nome:n,disp:isDisp(n,iso,esc.ano,esc.mes),livre:!jaEscalados.has(n)})).sort((a,b)=>{
+    const pa=(a.disp&&a.livre)?0:(a.disp||a.livre)?1:2;
+    const pb=(b.disp&&b.livre)?0:(b.disp||b.livre)?1:2;
+    return pa-pb;
+  });
+  document.getElementById('modal-lista').innerHTML=sugs.map(s=>{
+    let badge=s.disp&&s.livre?'<span class="badge">✓ Disponível e livre</span>':s.disp?'<span class="badge ind">Já escalado</span>':'<span class="badge ind">Sem disponibilidade</span>';
+    return `<div class="sugestao-item"><span class="nome">${s.nome}</span>${badge}<button class="btn-green" style="padding:6px 12px;font-size:0.78rem" onclick="confirmarSub('${s.nome}')">Escalar</button></div>`;
+  }).join('');
+  document.getElementById('modal-sub').classList.add('open');
+}
+
+function fecharModal(){document.getElementById('modal-sub').classList.remove('open');mCtx=null;}
+
+function confirmarSub(novo){
+  if(!mCtx)return;
+  const {cultoId,funcKey,nomeAtual,escalaKey}=mCtx;
+  const salvas=LS.escalas(),esc=salvas[escalaKey];
+  const culto=esc.cultos.find(c=>c.id===cultoId);
+  const idx=culto.funcoes[funcKey].indexOf(nomeAtual);
+  if(idx>-1)culto.funcoes[funcKey][idx]=novo;
+  LS.setEscalas(salvas);
+  fecharModal();toast(`${nomeAtual} → ${novo}`);renderSalvas();
+}
+
+// ============ MÚSICOS ============
+function renderMusicos(){
+  const dados=LS.dados(),cont=document.getElementById('lista-musicos');
+  cont.innerHTML=Object.entries(FUNCOES).map(([k,f])=>{
+    const l=dados[k]||[];
+    return `<div class="musico-section"><h3>${f.label} (${l.length})</h3><div class="musico-list">${l.map(n=>`<div class="musico-tag">${n}</div>`).join('')}</div></div>`;
+  }).join('');
+}
+
+// ============ EDITAR ============
+function renderEditar(){
+  const dados=LS.dados(),cont=document.getElementById('edit-forms');
+  cont.innerHTML=Object.entries(FUNCOES).map(([k,f])=>{
+    const l=dados[k]||[];
+    const tags=l.map((n,i)=>`<div class="edit-tag">${n}<button class="btn-rem" onclick="remMusico('${k}',${i})">×</button></div>`).join('');
+    return `<div class="form-section"><h3>${f.label}</h3><div class="form-row"><label>Novo músico</label><input id="inp-${k}" type="text" placeholder="Nome" onkeydown="if(event.key==='Enter')addMusico('${k}')"></div><button class="btn-add" onclick="addMusico('${k}')">+ Adicionar</button><div class="edit-list">${tags}</div></div>`;
+  }).join('');
+}
+
+function addMusico(fk){const i=document.getElementById('inp-'+fk),n=i.value.trim();if(!n)return;const d=LS.dados();if(!d[fk].includes(n)){d[fk].push(n);LS.setDados(d);i.value='';renderEditar();toast('Adicionado!');}else toast('Já existe.');}
+function remMusico(fk,i){const d=LS.dados();d[fk].splice(i,1);LS.setDados(d);renderEditar();toast('Removido.');}
+
+// ============ TOAST ============
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
+
+// ============ INIT ============
+popularSelectMembro();
+initMesLabel();
+document.getElementById('modal-sub').addEventListener('click',function(e){if(e.target===this)fecharModal();});
+</script>
+</body>
+</html>
