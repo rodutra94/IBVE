@@ -281,16 +281,31 @@ const SUPABASE_KEY = 'sb_publishable_Esdlvff0BQa6x-L0AOoRog_tFTZTWtt';
 const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const LS = {
-  // BUSCAR DA NUVEM
-  getEscalas: async () => {
-    const { data } = await supabase.from('escalas_nuvem').select('dados').eq('id', 'principal').single();
-    return data ? data.dados : {};
+  // Busca os músicos. Se não houver no navegador, usa a lista padrão (Beatriz, Eva, etc.)
+  dados: () => {
+    const s = localStorage.getItem('e_dados');
+    if (!s) {
+      // Se estiver vazio (como no primeiro acesso no Vercel), salva o padrão
+      localStorage.setItem('e_dados', JSON.stringify(dadosPadrao));
+      return JSON.parse(JSON.stringify(dadosPadrao));
+    }
+    return JSON.parse(s);
   },
-  // SALVAR NA NUVEM
-  setEscalas: async (escalas) => {
-    await supabase.from('escalas_nuvem').upsert({ id: 'principal', dados: escalas });
-    toast("Escala salva na nuvem para todos!");
-  }
+  setDados: d => localStorage.setItem('e_dados', JSON.stringify(d)),
+  
+  // Busca as escalas salvas
+  escalas: () => {
+    const s = localStorage.getItem('e_escalas');
+    return s ? JSON.parse(s) : {};
+  },
+  setEscalas: e => localStorage.setItem('e_escalas', JSON.stringify(e)),
+  
+  // Busca as disponibilidades
+  disp: () => {
+    const s = localStorage.getItem('e_disp');
+    return s ? JSON.parse(s) : {};
+  },
+  setDisp: d => localStorage.setItem('e_disp', JSON.stringify(d)),
 };
 
 // ============ SESSÃO ============
